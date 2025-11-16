@@ -1,0 +1,103 @@
+/* main.css — clean black / red theme (minimal) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom theme colors (your old styles below are fine) */
+:root {
+  --red: #e11d48;
+  --red-dark: #9f1239;
+  --card-bg: rgba(10, 10, 10, 0.6);
+  --muted: #9ca3af;
+}
+
+body {
+  @apply bg-black text-white min-h-screen;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+input, button {
+  @apply focus:outline-none;
+}
+
+:root{
+  --red: #e11d48;
+  --red-dark: #9f1239;
+  --card-bg: rgba(10,10,10,0.6);
+  --muted: #9ca3af;
+}
+
+html,body,#root{
+  height:100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #000; /* solid black */
+  color: #fff;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* small utility classes used by page */
+.bg-card {
+  background: var(--card-bg);
+}
+.border-red {
+  border: 1px solid rgba(225,29,72,0.12);
+}
+.btn-red {
+  background: var(--red);
+  color: white;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-red:disabled{ opacity: 0.6; cursor: not-allowed; }
+.input {
+  background: #0f1724;
+  border: 1px solid rgba(148,163,184,0.08);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  outline: none;
+}
+.small-muted { color: var(--muted); font-size: 0.85rem; }
+
+/* container */
+.container {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* card */
+.card {
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+}
+
+/* progress */
+.progress-track {
+  background: #111827;
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  transition: width 0.35s ease;
+  background: linear-gradient(90deg, var(--red), var(--red-dark));
+}
+
+/* responsive */
+@media (max-width: 640px){
+  .container { padding: 12px; }
+}
