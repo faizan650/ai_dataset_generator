@@ -5,4 +5,4 @@ pymongo
 openai
 passlib[bcrypt]
 requests
-
+python-multipart
