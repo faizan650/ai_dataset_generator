@@ -1,6 +1,8 @@
-
 fastapi
-uvicorn[standard]
+uvicorn
 python-dotenv
+pymongo
 openai
-pydantic
+passlib[bcrypt]
+requests
+python-multipart
