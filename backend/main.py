@@ -14,12 +14,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://ai-dataset-generator.pages.dev",
-        "http://localhost:5173"
+        "http://localhost:5173",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
 
 
 
