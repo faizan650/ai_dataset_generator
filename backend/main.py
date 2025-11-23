@@ -12,10 +12,15 @@ app = FastAPI(title="Dataset AI Backend")
 # ---------------------- CORS ----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://bitter-base-7797.farooquifaizan650.workers.dev",
+        "*"   # optional fallback
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ---------------------- Register auth routes ----------------------
 app.include_router(auth_router)
