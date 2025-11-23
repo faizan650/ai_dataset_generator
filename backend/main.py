@@ -7,49 +7,44 @@ from auth import router as auth_router
 import os
 import traceback
 
-# ------------------------------------------------------
-# FASTAPI APP
-# ------------------------------------------------------
 app = FastAPI(title="Dataset AI Backend")
 
 # ------------------------------------------------------
-# CORS CONFIG (Render + Cloudflare Pages fixed)
+# CORS FIX — WORKS FOR ALL CLOUDFLARE PAGES SUBDOMAINS
 # ------------------------------------------------------
-ORIGINS = [
-    "https://9206f1a4.ai-dataset-generator.pages.dev",   # FRONTEND
-    "http://localhost:5173",                    # LOCAL DEV
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ORIGINS,
+    allow_origin_regex=r"https://.*\.ai-dataset-generator\.pages\.dev",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ------------------------------------------------------
-# GLOBAL OPTIONS HANDLER (Render needs this!)
-# ------------------------------------------------------
+# Also allow localhost for local dev
+LOCALHOST = "http://localhost:5173"
+
+
 @app.options("/{path:path}")
 async def preflight_handler(path: str):
     return JSONResponse(
         content={"message": "OK"},
         headers={
-            "Access-Control-Allow-Origin": "https://ai-dataset-generator.pages.dev",
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "*",
         }
     )
 
+
 # ------------------------------------------------------
 # AUTH ROUTES
 # ------------------------------------------------------
 app.include_router(auth_router)
 
+
 # ------------------------------------------------------
-# DATASET GENERATION
+# GENERATE DATASET
 # ------------------------------------------------------
 @app.post("/generate/")
 async def generate_dataset(
@@ -94,14 +89,14 @@ async def generate_dataset(
         print(traceback.format_exc())
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
 # ------------------------------------------------------
 # STATUS
 # ------------------------------------------------------
 @app.get("/status")
 def get_status(file_name: str):
-    info = job_status(file_name)
-    print(f"📊 Status → {file_name}: {info}")
-    return info
+    return job_status(file_name)
+
 
 # ------------------------------------------------------
 # PREVIEW
@@ -111,11 +106,10 @@ def get_preview(file_name: str, lines: int = 8):
     path = os.path.join("datasets", file_name)
 
     if not os.path.exists(path):
-        print("❌ File not found for preview:", path)
         return {"preview": []}
 
-    data = generate_dataset_preview(path, lines)
-    return {"preview": data}
+    return {"preview": generate_dataset_preview(path, lines)}
+
 
 # ------------------------------------------------------
 # DOWNLOAD
@@ -127,22 +121,18 @@ def download_dataset(file_name: str):
         return FileResponse(path, filename=file_name, media_type="application/json")
     return JSONResponse({"error": "File not found"}, status_code=404)
 
+
 # ------------------------------------------------------
-# USER QUERIES / HISTORY
+# USER HISTORY
 # ------------------------------------------------------
 @app.get("/queries/user")
 def get_user_queries(user_email: str = Query(...)):
-    print(f"📬 Fetching queries for {user_email}")
-
     results = list(
         queries_collection.find({"user_email": user_email}, {"_id": 0})
     )
-
     return {"datasets": results}
 
-# ------------------------------------------------------
-# ROOT
-# ------------------------------------------------------
+
 @app.get("/")
 def home():
     return {"message": "Backend running 🚀"}
