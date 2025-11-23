@@ -13,13 +13,13 @@ app = FastAPI(title="Dataset AI Backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://bitter-base-7797.farooquifaizan650.workers.dev",
-        "*"   # optional fallback
+        "https://ai-dataset-generator.pages.dev",  # Cloudflare Pages domain
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # ---------------------- Register auth routes ----------------------
