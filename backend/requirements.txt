@@ -3,6 +3,7 @@ uvicorn
 python-dotenv
 pymongo
 openai
-passlib[bcrypt]
+passlib
+argon2-cffi
 requests
 python-multipart
