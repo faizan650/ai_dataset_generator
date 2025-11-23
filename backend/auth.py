@@ -1,36 +1,28 @@
 from fastapi import APIRouter, HTTPException
 from database import users_collection
 from models import UserSignup, UserLogin
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Auth"]
-)
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
-# Bcrypt context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use Argon2 instead of bcrypt
+ph = PasswordHasher()
 
 
 def hash_password(password: str):
-    if isinstance(password, str):
-        password = password.encode("utf-8")
-    return pwd_context.hash(password[:72])
+    return ph.hash(password)
 
 
 def verify_password(plain: str, hashed: str):
-    if isinstance(plain, str):
-        plain = plain.encode("utf-8")
     try:
-        return pwd_context.verify(plain[:72], hashed)
-    except ValueError:
+        return ph.verify(hashed, plain)
+    except Exception:
         return False
 
 
 # --------------------------
-# ⭐ IMPORTANT: ADD OPTIONS ⭐
+# OPTIONS (CORS preflight)
 # --------------------------
-
 @router.options("/signup")
 async def signup_options():
     return {"message": "OK"}
@@ -54,6 +46,7 @@ def signup(user: UserSignup):
         "email": user.email,
         "password": hashed_pw
     })
+
     return {"message": "User registered successfully"}
 
 
@@ -63,6 +56,7 @@ def signup(user: UserSignup):
 @router.post("/login")
 def login(user: UserLogin):
     db_user = users_collection.find_one({"email": user.email})
+
     if not db_user or not verify_password(user.password, db_user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials.")
 
