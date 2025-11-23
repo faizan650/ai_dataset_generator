@@ -16,7 +16,7 @@ app = FastAPI(title="Dataset AI Backend")
 # CORS CONFIG (Render + Cloudflare Pages fixed)
 # ------------------------------------------------------
 ORIGINS = [
-    "https://ai-dataset-generator.pages.dev",   # FRONTEND
+    "https://9206f1a4.ai-dataset-generator.pages.dev",   # FRONTEND
     "http://localhost:5173",                    # LOCAL DEV
 ]
 
