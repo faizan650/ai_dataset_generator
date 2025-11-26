@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import API from "../api/axios";
+import API from "../api/axios";   // <-- Your configured axios instance
 import { motion } from "framer-motion";
 import { FaDownload, FaDatabase } from "react-icons/fa";
 import DatasetPreview from "../components/DatasetPreview";
 import ProgressBar from "../components/ProgressBar";
 import logo from "/logo.png";
 import "../styles/main.css";
-
-const API_BASE = "http://127.0.0.1:8000";
 
 export default function Home({ user }) {
   const [domain, setDomain] = useState("");
@@ -22,7 +19,7 @@ export default function Home({ user }) {
   const [status, setStatus] = useState("idle");
   const [loading, setLoading] = useState(false);
 
-  // ---------------- Poll for progress updates ----------------
+  // ---------------- Poll status while generating ----------------
   useEffect(() => {
     let interval;
     if (status === "running" && fileName) {
@@ -31,8 +28,7 @@ export default function Home({ user }) {
     return () => clearInterval(interval);
   }, [status, fileName]);
 
-
-  // ---------------- Start dataset generation ----------------
+  // ---------------- Start generator ----------------
   const startGeneration = async () => {
     if (!domain.trim()) {
       setMessage("⚠️ Please enter a dataset topic.");
@@ -55,9 +51,7 @@ export default function Home({ user }) {
       formData.append("user_email", storedUser.email || "");
 
       const res = await API.post("/generate/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data?.file_name) {
@@ -65,8 +59,6 @@ export default function Home({ user }) {
         setDownloadUrl(API.defaults.baseURL + res.data.download_url);
         setMessage(`🧠 Generating dataset for '${domain}' ...`);
         setStatus("running");
-      } else {
-        throw new Error("Unexpected server response");
       }
     } catch (err) {
       console.error("❌ Generation failed:", err);
@@ -77,52 +69,47 @@ export default function Home({ user }) {
     }
   };
 
-
-
-  // ---------------- Check dataset generation status ----------------
+  // ---------------- Check status (NO localhost!) ----------------
   const checkStatus = async () => {
     if (!fileName) return;
 
     try {
-      const res = await axios.get(`${API_BASE}/status?file_name=${fileName}`);
+      const res = await API.get("/status", {
+        params: { file_name: fileName },
+      });
 
       setProgress(res.data.progress);
       setStatus(res.data.status);
 
-      if (res.data.progress >= 100) {
+      if (res.data.progress >= 100 || res.data.status === "completed") {
         setProgress(100);
         setStatus("completed");
-        setTimeout(fetchPreview, 600);  // Windows wait
+        setTimeout(fetchPreview, 600);
       }
     } catch (err) {
       console.error("❌ Status error:", err);
       setStatus("error");
+      setMessage("❌ Could not reach backend.");
     }
   };
 
-
-  // ---------------- Load preview ----------------
+  // ---------------- Fetch preview (NO localhost!) ----------------
   const fetchPreview = async () => {
-    console.log("📥 Fetching preview for:", fileName);
-
     try {
-      const res = await axios.get(`${API_BASE}/preview`, {
-        params: { file_name: fileName, lines: 8 }
+      const res = await API.get("/preview", {
+        params: { file_name: fileName, lines: 8 },
       });
 
-      console.log("📄 Preview response:", res.data);
-
-      if (res.data.preview && res.data.preview.length > 0) {
+      if (res.data.preview?.length > 0) {
         setPreview(res.data.preview);
         setMessage("✅ Dataset generation complete!");
       } else {
-        setMessage("⚠️ No preview available");
+        setMessage("⚠️ No preview available.");
       }
     } catch (err) {
       console.error("❌ Preview fetch failed:", err);
     }
   };
-
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white font-inter">
@@ -139,11 +126,10 @@ export default function Home({ user }) {
         </motion.div>
       </header>
 
-      {/* Main Card */}
+      {/* Main Section */}
       <main className="flex-1 flex flex-col items-center">
         <div className="w-full max-w-3xl bg-black/60 border border-red-900/30 rounded-2xl shadow-lg p-6 mx-4">
-
-          {/* Input */}
+          {/* Input Section */}
           <div className="space-y-4">
             <div className="flex gap-3">
               <input
@@ -152,8 +138,11 @@ export default function Home({ user }) {
                 placeholder="Enter domain (e.g. sports consultant, text-to-sql)"
                 className="flex-1 p-3 rounded-lg bg-zinc-900 border border-zinc-700"
               />
-              <button onClick={startGeneration} disabled={loading}
-                className="px-5 py-3 bg-red-600 hover:bg-red-700 rounded-lg">
+              <button
+                onClick={startGeneration}
+                disabled={loading}
+                className="px-5 py-3 bg-red-600 hover:bg-red-700 rounded-lg"
+              >
                 {loading ? "Starting..." : "Generate"}
               </button>
             </div>
@@ -161,22 +150,31 @@ export default function Home({ user }) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
                 <label className="text-sm text-gray-400">Records</label>
-                <input type="number" value={records}
+                <input
+                  type="number"
+                  value={records}
                   onChange={(e) => setRecords(Number(e.target.value))}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2" />
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2"
+                />
               </div>
 
               <div>
                 <label className="text-sm text-gray-400">Batch Size</label>
-                <input type="number" value={batchSize}
+                <input
+                  type="number"
+                  value={batchSize}
                   onChange={(e) => setBatchSize(Number(e.target.value))}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2" />
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2"
+                />
               </div>
 
               {status === "completed" && (
                 <div className="flex flex-col justify-end">
-                  <a href={downloadUrl} download={fileName}
-                    className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 rounded-lg p-2">
+                  <a
+                    href={downloadUrl}
+                    download={fileName}
+                    className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 rounded-lg p-2"
+                  >
                     <FaDownload /> Download
                   </a>
                 </div>
@@ -195,8 +193,11 @@ export default function Home({ user }) {
 
           {/* Preview */}
           {preview.length > 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="mt-6 bg-black/70 border border-zinc-800 rounded-lg p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-6 bg-black/70 border border-zinc-800 rounded-lg p-4"
+            >
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaDatabase className="text-red-500" /> Dataset Preview
               </h3>
