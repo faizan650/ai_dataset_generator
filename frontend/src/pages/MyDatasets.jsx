@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/axios"; // <-- same axios instance used in Home.jsx
+import API from "../api/axios";
 import { FaDatabase, FaDownload } from "react-icons/fa";
 
 export default function MyDatasets({ user }) {
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // BASE URL derived from vite env
-  const BASE_URL = API.defaults.baseURL; // example: https://ai-dataset-generator.onrender.com
-
   useEffect(() => {
-    const fetchDatasets = async () => {
+    const load = async () => {
       try {
         const res = await API.get("/queries/user", {
           params: { user_email: user.email },
         });
-
         setDatasets(res.data.datasets || []);
       } catch (err) {
         console.error("❌ Error fetching datasets:", err);
@@ -23,8 +19,7 @@ export default function MyDatasets({ user }) {
         setLoading(false);
       }
     };
-
-    fetchDatasets();
+    load();
   }, [user.email]);
 
   if (loading) {
@@ -52,7 +47,7 @@ export default function MyDatasets({ user }) {
               </div>
 
               <a
-                href={`${BASE_URL}/download/${d.file_name}`}
+                href={`${import.meta.env.VITE_BACKEND_URL}/download/${d.file_name}`}
                 download={d.file_name}
                 className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
               >
