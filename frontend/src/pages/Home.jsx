@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import API from "../api/axios";   // <-- Your configured axios instance
+import API from "../api/axios";
 import { motion } from "framer-motion";
 import { FaDownload, FaDatabase } from "react-icons/fa";
 import DatasetPreview from "../components/DatasetPreview";
 import ProgressBar from "../components/ProgressBar";
-import logo from "/logo.png";
+import logo from "../assets/logo.png";
 import "../styles/main.css";
 
 export default function Home({ user }) {
@@ -19,7 +19,7 @@ export default function Home({ user }) {
   const [status, setStatus] = useState("idle");
   const [loading, setLoading] = useState(false);
 
-  // ---------------- Poll status while generating ----------------
+  // ---------------- Poll status ----------------
   useEffect(() => {
     let interval;
     if (status === "running" && fileName) {
@@ -28,7 +28,7 @@ export default function Home({ user }) {
     return () => clearInterval(interval);
   }, [status, fileName]);
 
-  // ---------------- Start generator ----------------
+  // ---------------- Start dataset generation ----------------
   const startGeneration = async () => {
     if (!domain.trim()) {
       setMessage("⚠️ Please enter a dataset topic.");
@@ -56,7 +56,12 @@ export default function Home({ user }) {
 
       if (res.data?.file_name) {
         setFileName(res.data.file_name);
-        setDownloadUrl(API.defaults.baseURL + res.data.download_url);
+
+        // FIXED: No API.defaults.baseURL (Cloudflare breaks it)
+        setDownloadUrl(
+          import.meta.env.VITE_BACKEND_URL + res.data.download_url
+        );
+
         setMessage(`🧠 Generating dataset for '${domain}' ...`);
         setStatus("running");
       }
@@ -69,13 +74,13 @@ export default function Home({ user }) {
     }
   };
 
-  // ---------------- Check status (NO localhost!) ----------------
+  // ---------------- Check Status (CLOUD SAFE) ----------------
   const checkStatus = async () => {
     if (!fileName) return;
 
     try {
       const res = await API.get("/status", {
-        params: { file_name: fileName },
+        params: { file_name: fileName }
       });
 
       setProgress(res.data.progress);
@@ -93,11 +98,11 @@ export default function Home({ user }) {
     }
   };
 
-  // ---------------- Fetch preview (NO localhost!) ----------------
+  // ---------------- Fetch Preview ----------------
   const fetchPreview = async () => {
     try {
       const res = await API.get("/preview", {
-        params: { file_name: fileName, lines: 8 },
+        params: { file_name: fileName, lines: 8 }
       });
 
       if (res.data.preview?.length > 0) {
@@ -113,6 +118,7 @@ export default function Home({ user }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white font-inter">
+      
       {/* Header */}
       <header className="text-center mt-10 mb-6">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
@@ -129,6 +135,7 @@ export default function Home({ user }) {
       {/* Main Section */}
       <main className="flex-1 flex flex-col items-center">
         <div className="w-full max-w-3xl bg-black/60 border border-red-900/30 rounded-2xl shadow-lg p-6 mx-4">
+          
           {/* Input Section */}
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -193,11 +200,8 @@ export default function Home({ user }) {
 
           {/* Preview */}
           {preview.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-6 bg-black/70 border border-zinc-800 rounded-lg p-4"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="mt-6 bg-black/70 border border-zinc-800 rounded-lg p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaDatabase className="text-red-500" /> Dataset Preview
               </h3>
