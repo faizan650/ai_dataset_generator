@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../assets/logo.png"; // ✅ Correct relative import (Vite handles this)
+import logo from "/logo.png"; // ✅ Correct relative import (Vite handles this)
 
 export default function Navbar({ user, onLogout, setPage }) {
   return (
