@@ -39,6 +39,8 @@ export default function Home({ user }) {
       return;
     }
 
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+
     setMessage("");
     setProgress(0);
     setStatus("running");
@@ -48,24 +50,33 @@ export default function Home({ user }) {
     try {
       const formData = new FormData();
       formData.append("domain", domain);
-      formData.append("records", records.toString());
-      formData.append("batch_size", batchSize.toString());
-      formData.append("user_email", user.email);
+      formData.append("records", String(records));
+      formData.append("batch_size", String(batchSize));
+      formData.append("user_email", storedUser.email || "");
 
-      const res = await API.post("/generate/", formData);
+      const res = await API.post("/generate/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      setFileName(res.data.file_name);
-      setDownloadUrl(API.defaults.baseURL + res.data.download_url);
-      setMessage(`🧠 Generating dataset for '${domain}' ...`);
-
+      if (res.data?.file_name) {
+        setFileName(res.data.file_name);
+        setDownloadUrl(API.defaults.baseURL + res.data.download_url);
+        setMessage(`🧠 Generating dataset for '${domain}' ...`);
+        setStatus("running");
+      } else {
+        throw new Error("Unexpected server response");
+      }
     } catch (err) {
       console.error("❌ Generation failed:", err);
       setMessage("❌ Error starting generation.");
       setStatus("error");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
+
 
 
   // ---------------- Check dataset generation status ----------------
